@@ -19,7 +19,8 @@
                 <span class="label">{{ wrap_count }}</span>
             </div>
             <button class="panel_button" id="reset_button" @click="reset">Reset</button>
-            <button class="panel_button" id="draw_button" @click="download">Download svg</button>
+            <button class="panel_button" id="draw_button" @click='download("svg")'>Download svg</button>
+            <button class="panel_button" id="draw_button" @click='download("pdf")'>Download pdf</button>
         </div>
         <div id="canvas_wrapper">
             <Stage ref="stage"/>
@@ -30,6 +31,10 @@
 <script lang="ts">
     import { defineComponent } from "vue";
     import paper from "paper";
+    import * as pdfMake from "pdfmake/build/pdfmake";
+
+    // @ts-ignore fix for fonts
+    import * as pdfFonts from "pdfmake/build/vfs_fonts"; pdfMake.vfs = pdfFonts.pdfMake.vfs;
     
     import { default as Stage } from "./components/Canvas.vue";
     import { StageArray } from "./stageObjects/StageArray";
@@ -80,9 +85,9 @@
                 stage.updateCanvas();
             },
 
-            download() {
+            download(type: "svg" | "pdf" = "svg") {
                 // add dark background with some padding
-                const bounds = new paper.Rectangle(paper.project.activeLayer.bounds);
+                const bounds = new paper.Rectangle(paper.project.activeLayer.strokeBounds);
                 bounds.width += 20; bounds.x -= 10;
                 bounds.height += 20; bounds.y -= 10;
                 
@@ -90,14 +95,32 @@
                 rect.fillColor = new paper.Color('#181818');
                 rect.sendToBack();
 
-                var svg = paper.project.exportSVG({ asString: true, bounds: "content" });
+                const svg = paper.project.exportSVG({ asString: true, bounds: "content" });
                 if (typeof svg !== "string") return;
-                var blob = new Blob([svg], {type: "image/svg+xml;charset=utf-8"});
-                
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = "image.svg";
-                link.click();
+                    
+                if (type == "svg") {
+                    const blob = new Blob([svg], {type: "image/svg+xml;charset=utf-8"});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "scene.svg";
+                    link.click();
+                } else if (type == "pdf") {
+                    const docDefinition = {
+                        pageSize: {
+                            width: bounds.width,
+                            height: bounds.height
+                        },
+                        pageMargins: 0,
+                        content: [
+                            {
+                                svg: svg,
+                                width: bounds.width,
+                                height: bounds.height,
+                            }
+                        ]
+                    };
+                    pdfMake.createPdf(docDefinition).download("scene.pdf");
+                }
             }
         },
 
