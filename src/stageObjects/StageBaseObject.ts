@@ -1,21 +1,27 @@
-export class StageBaseObject {
-    renderOptions: Record<string, any> = {
-        position: { x: 0, y: 0 }
-    };
+import paper from 'paper';
 
-    constructor(options: Record<string, any> = {}) {
-        this.mergeOptions(options);
+export class StageBaseObject {
+    protected _position: paper.Point;
+    declare drawOptions: Record<string, any>;
+
+    set position(position: paper.PointLike) {
+        this._position = new paper.Point(position);
     }
 
-    mergeOptions(options: Record<string, any>) {
-        for (const key in options) {
-            if (options.hasOwnProperty(key)) {
-                this.renderOptions[key] = options[key];
-            }
-        }
+    get position(): paper.Point {
+        return this._position;
+    }
+
+    get center(): paper.Point {
+        return this.position;
+    }
+
+    constructor(position: paper.PointLike, options?: Record<string, any>) {
+        this._position = new paper.Point(position);
+        this.drawOptions = options ?? {};
     }
 
     draw() {
-        return;
+        return new paper.Item();
     }
 }

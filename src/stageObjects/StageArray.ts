@@ -1,84 +1,89 @@
 import paper from 'paper';
-import { StageBaseObject } from './StageBaseObject';
-import type { StageArrayOptions } from './types';
+import { StageBaseObject } from "./StageBaseObject";
+import { StageLabel } from "./StageLabel";
+import { StageRect } from "./StageRect";
+import type { ContainerOptions, Subset } from "./types";
 
 export class StageArray extends StageBaseObject {
-    private data: any[];
+    private group = new paper.Group();
+    declare drawOptions: Subset<ContainerOptions>;
+    data: any[];
 
-    renderOptions = {
-        position: { x: 0, y: 0 },
-        wrap_count: 1,
-        cell_size: 20,
-        font_size: 10
-    };
+    set position(position: paper.PointLike) {
+        this.group.position = new paper.Point(position).add(
+            new paper.Point(this.group.bounds.width/2, this.group.bounds.height/2)
+        );
 
-    set position(position: { x: number, y: number }) {
-        this.renderOptions.position = position;
+        this._position = this.group.bounds.topLeft;
     }
 
-    /**
-     * @param data - Array of data to be displayed. Data must heve a toString() method
-     * @param options - Options for rendering (see StageArrayOptions)
-     */
-    constructor(data: any[], options: StageArrayOptions = {}) {
-        super(options);
+    get position(): paper.Point {
+        return this._position;
+    }
 
+    get center(): paper.Point {
+        return this.group.position;
+    }
+    
+    constructor(position: paper.PointLike, data: any[], options?: Subset<ContainerOptions>) {
+        super(position, options);
+
+        this.position = position;
         this.data = data;
-        this.renderOptions.wrap_count = data.length;
-
-        this.mergeOptions(options);
     }
 
     draw() {
-        const wrap_count = this.renderOptions.wrap_count;
-        const cell_size = this.renderOptions.cell_size;
-        const font_size = this.renderOptions.font_size;
+        this.group.removeChildren();
 
-        const origin = new paper.Point(this.renderOptions.position);
-        const group = new paper.Group();
+        const wrap_count = this.drawOptions?.wrap_count ?? this.data.length;
+        const height = this.drawOptions?.size ?? 40;
+        const origin = new paper.Point(this.position);
+        
+        const font_size = height / 3;
+        const font_height = font_size * 5/6;
+        const margin = font_size;
+
+        const textOptions = {
+            font_size: font_size, 
+            font_color: "white",
+            justification: "center"
+        };
+
+        let totalRowLenght = 0;
         
         this.data.map((item, index) => {
-            // Calculate cell position (top left corner)
-            const x = origin.x + (index%wrap_count) * cell_size;
-            const y = origin.y + Math.floor(index/wrap_count) * (cell_size + 1.5*font_size);
+            const text = item.toString();
+            const width = Math.max(height, text.length * (font_size - 4) + margin * 2);
 
-            // Draw cell
-            const cornerAnchor = new paper.Point(x, y);
-            const cell = new paper.Path.Rectangle(cornerAnchor, new paper.Size(cell_size, cell_size));
+            const x = origin.x + totalRowLenght;
+            const y = origin.y + Math.floor(index / wrap_count) * (height + font_size * 1.6);
 
-            cell.strokeColor = new paper.Color("white");
-            group.addChild(cell);
+            const cell = new StageRect({x, y}, width, height, {
+                stroke_color: "white" 
+            });
+            
+            const value = new StageLabel({ 
+                x: x + width/2, 
+                y: y + height/2 + font_height/2
+            }, text, textOptions);
 
-            // Draw cell value
-            const valueAnchor = cornerAnchor.add(new paper.Point(cell_size/2, cell_size/2 + font_size/3));
-            const value = new paper.PointText(valueAnchor);
+            const label = new StageLabel({
+                x: x + width/2, 
+                y: y + height + font_height * 1.2
+            }, index.toString(), textOptions);
 
-            value.justification = "center";
-            value.fillColor = new paper.Color("white");
-            value.fontSize = font_size;
-            value.content = item.toString()
-            group.addChild(value);
+            totalRowLenght += width;
+            if (index % wrap_count == wrap_count - 1) totalRowLenght = 0;
 
-            // Draw cell label
-            const labelAnchor = cornerAnchor.add(new paper.Point(cell_size/2, cell_size + font_size));
-            const label = new paper.PointText(labelAnchor);
-
-            label.justification = "center"
-            label.fillColor = new paper.Color("white")
-            label.fontSize = font_size;
-            label.content = index.toString();
-            group.addChild(label);
+            this.group.addChildren([cell.draw(), value.draw(), label.draw()]);
         });
 
         // add invisible rectangle to make dragging easier
-        const rect = new paper.Path.Rectangle(group.strokeBounds);
+        const rect = new paper.Path.Rectangle(this.group.strokeBounds);
         rect.fillColor = new paper.Color("white");
         rect.opacity = 0;
-        group.addChild(rect);
+        this.group.addChild(rect);
 
-        group.onMouseDrag = (event: any) => {
-            group.position = group.position.add(event.delta);
-            this.position = group.bounds.topLeft;
-        }
+        return this.group;
     }
 }

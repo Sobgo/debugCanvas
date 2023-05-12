@@ -10,10 +10,6 @@
                 <input type="range" min="1" max="100" v-model="cell_size" class="panel_button" style="margin: -16px 0px">
                 <span class="label">{{ cell_size }}</span>
 
-                <span class="label">Label font size:</span>
-                <input type="range" min="1" max="100" v-model="font_size" class="panel_button" style="margin: -16px 0px">
-                <span class="label">{{ font_size }}</span>
-
                 <span class="label">Wrap count:</span>
                 <input type="range" min="1" max="100" v-model="wrap_count" class="panel_button" style="margin: -16px 0px">
                 <span class="label">{{ wrap_count }}</span>
@@ -31,18 +27,27 @@
 <script lang="ts">
     import { defineComponent } from "vue";
     import paper from "paper";
-    import * as pdfMake from "pdfmake/build/pdfmake";
 
-    // @ts-ignore fix for fonts
-    import * as pdfFonts from "pdfmake/build/vfs_fonts"; pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    
-    import { default as Stage } from "./components/Canvas.vue";
+    import Stage from "./components/Stage.vue";
     import { StageArray } from "./stageObjects/StageArray";
+import { StageLabel } from "./stageObjects/StageLabel";
+
+    const randomString = (length: number) => {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+
+        for (let i = 0; i < length; ++i) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+
+        return result;
+    }
 
     const randArray = (size: number) => {
         const arr = [];
         for (let i = 0; i < size; ++i) {
-            arr.push(Math.floor(Math.random() * 100));
+            arr.push(randomString(Math.floor(Math.random() * 15) + 1));
         }
         return arr;
     }
@@ -54,8 +59,8 @@
             dragging: false,
             square_count: '20',
             cell_size: '30',
-            font_size: '12',
             wrap_count: '5',
+            arrays: [] as StageArray[]
         }),
 
         methods: {
@@ -65,8 +70,34 @@
 
                 this.square_count = '20';
                 this.cell_size = '30';
-                this.font_size = '12';
                 this.wrap_count = '5';
+
+                const stage = this.$refs.stage as any;
+
+                stage.clearObjects();
+                this.arrays = [];
+
+                this.arrays.push(new StageArray(
+                    { x: 50, y: 60 }, 
+                    randArray(parseInt(this.square_count)),
+                    { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count) }
+                ));
+
+                this.arrays.push(new StageArray(
+                    { x: 50, y: 280 }, 
+                    randArray(parseInt(this.square_count)),
+                    { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count) }
+                ));
+
+                for (const array of this.arrays) {
+                    stage.addObject(array);
+                }
+
+                stage.addObject(new StageLabel(
+                    { x: 50, y: 30 },
+                    "Test",
+                    { font_size: 20, font_color: "white" }
+                ));
 
                 this.update();
             },
@@ -74,53 +105,28 @@
             update() {
                 const stage = this.$refs.stage as any;
 
-                for (const object of stage.objects.values()) {
-                    object.data = randArray(parseInt(this.square_count));
-                    const opt = object.renderOptions;   
-                    opt.cell_size = parseInt(this.cell_size),
-                    opt.wrap_count = parseInt(this.wrap_count),
-                    opt.font_size = parseInt(this.font_size)
+                for (const array of this.arrays) {
+                    if (array.data.length != parseInt(this.square_count)) {
+                        const diff = array.data.length - parseInt(this.square_count);
+
+                        if (diff > 0) {
+                            array.data.splice(parseInt(this.square_count), diff);
+                        } else {
+                            array.data.push(...randArray(-diff));
+                        }
+                    }
+                    
+                    array.drawOptions.size = parseInt(this.cell_size);
+                    array.drawOptions.wrap_count = parseInt(this.wrap_count);
                 }
+
 
                 stage.updateCanvas();
             },
 
-            download(type: "svg" | "pdf" = "svg") {
-                // add dark background with some padding
-                const bounds = new paper.Rectangle(paper.project.activeLayer.strokeBounds);
-                bounds.width += 20; bounds.x -= 10;
-                bounds.height += 20; bounds.y -= 10;
-                
-                const rect = new paper.Path.Rectangle(bounds);
-                rect.fillColor = new paper.Color('#181818');
-                rect.sendToBack();
-
-                const svg = paper.project.exportSVG({ asString: true, bounds: "content" });
-                if (typeof svg !== "string") return;
-                    
-                if (type == "svg") {
-                    const blob = new Blob([svg], {type: "image/svg+xml;charset=utf-8"});
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = "scene.svg";
-                    link.click();
-                } else if (type == "pdf") {
-                    const docDefinition = {
-                        pageSize: {
-                            width: bounds.width,
-                            height: bounds.height
-                        },
-                        pageMargins: 0,
-                        content: [
-                            {
-                                svg: svg,
-                                width: bounds.width,
-                                height: bounds.height,
-                            }
-                        ]
-                    };
-                    pdfMake.createPdf(docDefinition).download("scene.pdf");
-                }
+            download(type: "svg" | "pdf") {
+                const stage = this.$refs.stage as any;
+                stage.download(type);
             }
         },
 
@@ -129,22 +135,6 @@
         },
 
         mounted() {
-            const stage = this.$refs.stage as any;
-
-            stage.addObject(new StageArray(randArray(parseInt(this.square_count)), { 
-                    position: {x: 50, y: 30}, 
-                    cell_size: parseInt(this.cell_size),
-                    wrap_count: parseInt(this.wrap_count),
-                    font_size: parseInt(this.font_size)
-                }));
-
-            stage.addObject(new StageArray(randArray(parseInt(this.square_count)), { 
-                position: {x: 250, y: 250}, 
-                cell_size: parseInt(this.cell_size),
-                wrap_count: parseInt(this.wrap_count),
-                font_size: parseInt(this.font_size)
-            }));
-
             this.reset();
         }
     });

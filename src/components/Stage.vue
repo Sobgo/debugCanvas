@@ -5,32 +5,38 @@
 <script lang="ts">
     import { defineComponent } from "vue";
     import paper from "paper";
+    import * as pdfMake from "pdfmake/build/pdfmake";
+
+    // @ts-ignore fix for fonts
+    import * as pdfFonts from "pdfmake/build/vfs_fonts"; pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
     import type { StageBaseObject } from "../stageObjects/StageBaseObject";
+    import { StageDragable } from "../stageObjects/StageDragable";
 
     export default defineComponent({
         data: () => ({ 
             dragging: false,
             tool: new paper.Tool(),
-            objects: new Map<number, StageBaseObject>(),
+            objects: new Map<number, StageDragable>(),
             lastId: 0
         }),
 
         methods: {
             updateCanvas() {
                 paper.project.clear();
-                for (const object of this.objects.values()) {       
-                    object.draw();
+
+                for (const object of this.objects.values()) {   
+                    paper.project.activeLayer.addChild(object.draw());
                 }
             },
 
             addObject(object: StageBaseObject): number {
                 const id = this.lastId++;
-                this.objects.set(id, object);
+                this.objects.set(id, new StageDragable(object));
                 return id;
             },
 
-            getObject(id: number): StageBaseObject | undefined {
+            getObject(id: number): StageDragable | undefined {
                 return this.objects.get(id);
             },
 
@@ -55,6 +61,7 @@
                     // only left mouse button
                     if (event.event.button != 0) return;
 
+                    // drag canvas only if no object is hit
                     const hitResult = paper.project.hitTest(event.point, hitOptions);
                     if (hitResult) return;
 
@@ -67,7 +74,6 @@
 
                     const delta = event.downPoint.subtract(event.point);
                     paper.view.translate(delta.multiply(-1));
-                    this.updateCanvas();
                 }
 
                 this.tool.onMouseUp = (event: any) => {
@@ -102,6 +108,44 @@
 
                     this.updateCanvas();
                 });
+            },
+
+            download(type: "svg" | "pdf" = "svg") {
+                // add dark background with some padding
+                const bounds = new paper.Rectangle(paper.project.activeLayer.strokeBounds);
+                bounds.width += 20; bounds.x -= 10;
+                bounds.height += 20; bounds.y -= 10;
+                
+                const rect = new paper.Path.Rectangle(bounds);
+                rect.fillColor = new paper.Color('#181818');
+                rect.sendToBack();
+
+                const svg = paper.project.exportSVG({ asString: true, bounds: "content" });
+                if (typeof svg !== "string") return;
+                    
+                if (type == "svg") {
+                    const blob = new Blob([svg], {type: "image/svg+xml;charset=utf-8"});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "scene.svg";
+                    link.click();
+                } else if (type == "pdf") {
+                    const docDefinition = {
+                        pageSize: {
+                            width: bounds.width,
+                            height: bounds.height
+                        },
+                        pageMargins: 0,
+                        content: [
+                            {
+                                svg: svg,
+                                width: bounds.width,
+                                height: bounds.height,
+                            }
+                        ]
+                    };
+                    pdfMake.createPdf(docDefinition).download("scene.pdf");
+                }
             }
         },
 
