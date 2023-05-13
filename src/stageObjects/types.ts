@@ -16,4 +16,5 @@ export type LabelOptions = {
 export type ContainerOptions = {
     wrap_count: number;
     size: number;
+    aspect_ratio: "fit" | "square" | "longest";
 };

@@ -44,10 +44,10 @@ import { StageLabel } from "./stageObjects/StageLabel";
         return result;
     }
 
-    const randArray = (size: number) => {
+    const randArray = (size: number, str_len: number) => {
         const arr = [];
         for (let i = 0; i < size; ++i) {
-            arr.push(randomString(Math.floor(Math.random() * 15) + 1));
+            arr.push(randomString(Math.floor(Math.random() * (str_len - 1)) + 1));
         }
         return arr;
     }
@@ -78,14 +78,14 @@ import { StageLabel } from "./stageObjects/StageLabel";
                 this.arrays = [];
 
                 this.arrays.push(new StageArray(
-                    { x: 50, y: 60 }, 
-                    randArray(parseInt(this.square_count)),
-                    { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count) }
+                    { x: 30, y: 60 }, 
+                    randArray(parseInt(this.square_count), 10),
+                    { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count), aspect_ratio: "longest" }
                 ));
 
                 this.arrays.push(new StageArray(
                     { x: 50, y: 280 }, 
-                    randArray(parseInt(this.square_count)),
+                    randArray(parseInt(this.square_count), 15),
                     { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count) }
                 ));
 
@@ -96,7 +96,7 @@ import { StageLabel } from "./stageObjects/StageLabel";
                 stage.addObject(new StageLabel(
                     { x: 50, y: 30 },
                     "Test",
-                    { font_size: 20, font_color: "white" }
+                    { font_size: 20, font_color: "red" }
                 ));
 
                 this.update();
@@ -112,7 +112,7 @@ import { StageLabel } from "./stageObjects/StageLabel";
                         if (diff > 0) {
                             array.data.splice(parseInt(this.square_count), diff);
                         } else {
-                            array.data.push(...randArray(-diff));
+                            array.data.push(...randArray(-diff, 15));
                         }
                     }
                     

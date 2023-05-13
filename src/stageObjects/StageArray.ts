@@ -35,13 +35,20 @@ export class StageArray extends StageBaseObject {
     draw() {
         this.group.removeChildren();
 
+        const origin = new paper.Point(this.position);
         const wrap_count = this.drawOptions?.wrap_count ?? this.data.length;
         const height = this.drawOptions?.size ?? 40;
-        const origin = new paper.Point(this.position);
-        
         const font_size = height / 3;
         const font_height = font_size * 5/6;
         const margin = font_size;
+       
+        const aspect = this.drawOptions?.aspect_ratio ?? "fit";
+
+        let width = height;
+        if (aspect == "longest") {
+            const longest = this.data.reduce((a, b) => a.toString().length > b.toString().length ? a : b);
+            width = longest.toString().length * (font_size - 4) + margin * 2;
+        }
 
         const textOptions = {
             font_size: font_size, 
@@ -50,10 +57,13 @@ export class StageArray extends StageBaseObject {
         };
 
         let totalRowLenght = 0;
-        
+
         this.data.map((item, index) => {
             const text = item.toString();
-            const width = Math.max(height, text.length * (font_size - 4) + margin * 2);
+
+            if (aspect == "fit") {
+                width = Math.max(height, text.length * (font_size - 4) + margin * 2);
+            }
 
             const x = origin.x + totalRowLenght;
             const y = origin.y + Math.floor(index / wrap_count) * (height + font_size * 1.6);
