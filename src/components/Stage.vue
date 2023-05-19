@@ -11,13 +11,13 @@
     import * as pdfFonts from "pdfmake/build/vfs_fonts"; pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
     import type { StageBaseObject } from "../stageObjects/StageBaseObject";
-    import { StageDragable } from "../stageObjects/StageDragable";
+    import { StageCollection } from "@/stageObjects/StageCollection";
 
     export default defineComponent({
         data: () => ({ 
             dragging: false,
             tool: new paper.Tool(),
-            objects: new Map<number, StageDragable>(),
+            objects: new Map<number, StageCollection>(),
             lastId: 0
         }),
 
@@ -32,11 +32,11 @@
 
             addObject(object: StageBaseObject): number {
                 const id = this.lastId++;
-                this.objects.set(id, new StageDragable(object));
+                this.objects.set(id, new StageCollection([object], true));
                 return id;
             },
 
-            getObject(id: number): StageDragable | undefined {
+            getObject(id: number): StageCollection | undefined {
                 return this.objects.get(id);
             },
 
@@ -105,8 +105,6 @@
                     const center = paper.view.center;
                     const offset = mouse.subtract(center);
                     paper.view.center = center.add(offset.multiply(zoom - 1));
-
-                    this.updateCanvas();
                 });
             },
 

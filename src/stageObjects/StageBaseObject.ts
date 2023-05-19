@@ -12,10 +12,6 @@ export class StageBaseObject {
         return this._position;
     }
 
-    get center(): paper.Point {
-        return this.position;
-    }
-
     constructor(position: paper.PointLike, options?: Record<string, any>) {
         this._position = new paper.Point(position);
         this.drawOptions = options ?? {};

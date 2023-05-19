@@ -9,26 +9,8 @@ export class StageArray extends StageBaseObject {
     declare drawOptions: Subset<ContainerOptions>;
     data: any[];
 
-    set position(position: paper.PointLike) {
-        this.group.position = new paper.Point(position).add(
-            new paper.Point(this.group.bounds.width/2, this.group.bounds.height/2)
-        );
-
-        this._position = this.group.bounds.topLeft;
-    }
-
-    get position(): paper.Point {
-        return this._position;
-    }
-
-    get center(): paper.Point {
-        return this.group.position;
-    }
-    
     constructor(position: paper.PointLike, data: any[], options?: Subset<ContainerOptions>) {
         super(position, options);
-
-        this.position = position;
         this.data = data;
     }
 
@@ -39,7 +21,6 @@ export class StageArray extends StageBaseObject {
         const wrap_count = this.drawOptions?.wrap_count ?? this.data.length;
         const height = this.drawOptions?.size ?? 40;
         const font_size = height / 3;
-        const font_height = font_size * 5/6;
         const margin = font_size;
        
         const aspect = this.drawOptions?.aspect_ratio ?? "fit";
@@ -74,13 +55,13 @@ export class StageArray extends StageBaseObject {
             
             const value = new StageLabel({ 
                 x: x + width/2, 
-                y: y + height/2 + font_height/2
-            }, text, textOptions);
+                y: y + height/2,
+            }, text, {...textOptions, align: "center"});
 
             const label = new StageLabel({
                 x: x + width/2, 
-                y: y + height + font_height * 1.2
-            }, index.toString(), textOptions);
+                y: y + height + 4,
+            }, index.toString(), {...textOptions, align: "top"});
 
             totalRowLenght += width;
             if (index % wrap_count == wrap_count - 1) totalRowLenght = 0;

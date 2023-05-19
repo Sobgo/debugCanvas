@@ -31,6 +31,10 @@
     import Stage from "./components/Stage.vue";
     import { StageArray } from "./stageObjects/StageArray";
 import { StageLabel } from "./stageObjects/StageLabel";
+import { StageEllipse } from "./stageObjects/StageEllipse";
+import { StageRect } from "./stageObjects/StageRect";
+import { StagePoint } from "./stageObjects/StagePoint";
+import { StageCollection } from "./stageObjects/StageCollection";
 
     const randomString = (length: number) => {
         let result = '';
@@ -94,10 +98,24 @@ import { StageLabel } from "./stageObjects/StageLabel";
                 }
 
                 stage.addObject(new StageLabel(
-                    { x: 50, y: 30 },
+                    { x: 0, y: 0 },
                     "Test",
-                    { font_size: 20, font_color: "red" }
+                    { font_size: 16, font_color: "red", align: "top" }
                 ));
+
+                stage.addObject(new StageEllipse(
+                    { x: 400, y: 0 },
+                    100, 50,
+                    { fill_color: "blue", stroke_color: "red" }
+                ));
+
+                stage.addObject(new StageCollection([
+                    new StagePoint({ x: 400, y: 400 }, "0"),
+                    new StagePoint({ x: 400, y: 480 }, "1"),
+                    new StagePoint({ x: 480, y: 400 }, "2"),
+                    new StagePoint({ x: 480, y: 480 }, "3"),
+                    new StagePoint({ x: 440, y: 240 }, "4"),
+                ]));
 
                 this.update();
             },
