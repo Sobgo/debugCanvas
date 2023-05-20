@@ -1,28 +1,30 @@
 import paper from 'paper';
 import { StageBaseObject } from "./StageBaseObject";
 import { StageLabel } from "./StageLabel";
+import type { ShapeOptions, Subset } from './types';
 
 export class StagePoint extends StageBaseObject {
-    private group = new paper.Group();
     text: string;
     
-    constructor(position: paper.PointLike, text: string) {
-        super(position);
+    constructor(position: paper.PointLike, text: string, options?: Subset<ShapeOptions>) {
+        super(position, options);
         this.text = text;
     }
 
     draw() {
-        this.group.removeChildren();
-        const position = this.position;
+        const group = new paper.Group();
+        const path = new paper.Path.Circle(this.position, 3);
 
-        const value = new paper.Path.Circle(position, 3);
-        value.fillColor = new paper.Color('white');
-        value.strokeColor = new paper.Color('white');
+        path.fillColor = new paper.Color(this.drawOptions?.fill_color ?? "white");
+        path.strokeColor = new paper.Color(this.drawOptions?.stroke_color ?? "white");
 
-        const label = new StageLabel(position.add([0, 5]),
-            this.text, { font_size: 6, font_color: "white", align: "top", justification: "left" });
+        const label = new StageLabel(
+            this.position.add([0, 5]),
+            this.text, 
+            { font_size: 6, font_color: "white", align: "top", justification: "left" }
+        );
     
-        this.group.addChildren([value,  label.draw()]);
-        return this.group;
+        group.addChildren([path,  label.draw()]);
+        return group;
     }
 }

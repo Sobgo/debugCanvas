@@ -5,7 +5,6 @@ import { StageRect } from "./StageRect";
 import type { ContainerOptions, Subset } from "./types";
 
 export class StageArray extends StageBaseObject {
-    private group = new paper.Group();
     declare drawOptions: Subset<ContainerOptions>;
     data: any[];
 
@@ -15,7 +14,7 @@ export class StageArray extends StageBaseObject {
     }
 
     draw() {
-        this.group.removeChildren();
+        const group = new paper.Group();
 
         const origin = new paper.Point(this.position);
         const wrap_count = this.drawOptions?.wrap_count ?? this.data.length;
@@ -66,15 +65,15 @@ export class StageArray extends StageBaseObject {
             totalRowLenght += width;
             if (index % wrap_count == wrap_count - 1) totalRowLenght = 0;
 
-            this.group.addChildren([cell.draw(), value.draw(), label.draw()]);
+            group.addChildren([cell.draw(), value.draw(), label.draw()]);
         });
 
         // add invisible rectangle to make dragging easier
-        const rect = new paper.Path.Rectangle(this.group.strokeBounds);
+        const rect = new paper.Path.Rectangle(group.strokeBounds);
         rect.fillColor = new paper.Color("white");
         rect.opacity = 0;
-        this.group.addChild(rect);
+        group.addChild(rect);
 
-        return this.group;
+        return group;
     }
 }

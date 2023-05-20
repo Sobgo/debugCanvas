@@ -30,9 +30,9 @@
                 }
             },
 
-            addObject(object: StageBaseObject): number {
+            addObject(object: StageBaseObject, dragable: boolean = true): number {
                 const id = this.lastId++;
-                this.objects.set(id, new StageCollection([object], true));
+                this.objects.set(id, new StageCollection([0,0], [object], dragable));
                 return id;
             },
 
@@ -110,15 +110,13 @@
 
             download(type: "svg" | "pdf" = "svg") {
                 // add dark background with some padding
-                const bounds = new paper.Rectangle(paper.project.activeLayer.strokeBounds);
-                bounds.width += 20; bounds.x -= 10;
-                bounds.height += 20; bounds.y -= 10;
+                const bounds = new paper.Rectangle(paper.project.activeLayer.strokeBounds).expand(20);
                 
                 const rect = new paper.Path.Rectangle(bounds);
                 rect.fillColor = new paper.Color('#181818');
                 rect.sendToBack();
 
-                const svg = paper.project.exportSVG({ asString: true, bounds: "content" });
+                const svg = paper.project.exportSVG({ asString: true, bounds: bounds });
                 if (typeof svg !== "string") return;
                     
                 if (type == "svg") {
@@ -144,6 +142,8 @@
                     };
                     pdfMake.createPdf(docDefinition).download("scene.pdf");
                 }
+
+               rect.remove();
             }
         },
 

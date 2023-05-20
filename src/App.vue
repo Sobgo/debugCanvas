@@ -30,11 +30,12 @@
 
     import Stage from "./components/Stage.vue";
     import { StageArray } from "./stageObjects/StageArray";
-import { StageLabel } from "./stageObjects/StageLabel";
-import { StageEllipse } from "./stageObjects/StageEllipse";
-import { StageRect } from "./stageObjects/StageRect";
-import { StagePoint } from "./stageObjects/StagePoint";
-import { StageCollection } from "./stageObjects/StageCollection";
+    import { StageLabel } from "./stageObjects/StageLabel";
+    import { StageEllipse } from "./stageObjects/StageEllipse";
+    import { StagePoint } from "./stageObjects/StagePoint";
+    import { StageCollection } from "./stageObjects/StageCollection";
+    import { StagePolygon } from "./stageObjects/StagePolygon";
+    import { StageGraph } from "./stageObjects/StageGraph";
 
     const randomString = (length: number) => {
         let result = '';
@@ -82,12 +83,6 @@ import { StageCollection } from "./stageObjects/StageCollection";
                 this.arrays = [];
 
                 this.arrays.push(new StageArray(
-                    { x: 30, y: 60 }, 
-                    randArray(parseInt(this.square_count), 10),
-                    { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count), aspect_ratio: "longest" }
-                ));
-
-                this.arrays.push(new StageArray(
                     { x: 50, y: 280 }, 
                     randArray(parseInt(this.square_count), 15),
                     { size: parseInt(this.cell_size), wrap_count: parseInt(this.wrap_count) }
@@ -98,9 +93,9 @@ import { StageCollection } from "./stageObjects/StageCollection";
                 }
 
                 stage.addObject(new StageLabel(
-                    { x: 0, y: 0 },
+                    { x: 50, y: 200 },
                     "Test",
-                    { font_size: 16, font_color: "red", align: "top" }
+                    { font_size: 16, font_color: "red", align: "top", outline_color: "blue"}
                 ));
 
                 stage.addObject(new StageEllipse(
@@ -109,13 +104,30 @@ import { StageCollection } from "./stageObjects/StageCollection";
                     { fill_color: "blue", stroke_color: "red" }
                 ));
 
-                stage.addObject(new StageCollection([
-                    new StagePoint({ x: 400, y: 400 }, "0"),
-                    new StagePoint({ x: 400, y: 480 }, "1"),
-                    new StagePoint({ x: 480, y: 400 }, "2"),
-                    new StagePoint({ x: 480, y: 480 }, "3"),
-                    new StagePoint({ x: 440, y: 240 }, "4"),
+                stage.addObject(new StageCollection([0, 0], [
+                    new StagePoint({ x: 160, y: 180 }, "0"),
+                    new StagePoint({ x: 160, y: 260 }, "1"),
+                    new StagePoint({ x: 240, y: 180 }, "2"),
+                    new StagePoint({ x: 240, y: 260 }, "3"),
+                    new StagePoint({ x: 200, y: 20 }, "4"),
                 ]));
+
+                stage.addObject(new StagePolygon([0, 0],[
+                    [320, 40], [280, 200], [360, 230], [420, 230], [460, 200]
+                ], { 
+                    stroke_color: "red",
+                    stroke_width: 5,
+                }));
+
+                stage.addObject(new StageGraph(
+                    { x: 0, y: 0 },
+                    {
+                        vertices: [[20, 50], [30, 120], [140, 120], [120, 20]],
+                        edges: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 2]],
+                        vertexValues: ["0", "1", "2", "3", "4"],
+                        edgeValues: ["10", "11", "12", "13", "14"]
+                    },
+                ), false);
 
                 this.update();
             },

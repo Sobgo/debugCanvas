@@ -22,14 +22,21 @@ export class StageCollection extends StageBaseObject {
             this.group.onMouseDrag = (event: paper.MouseEvent) => {
                 this.group.position = this.group.position.add(event.delta);
                 this.position = this.position.add(event.delta);
+                this.data.forEach((object) => {
+                    object.update(event.delta);
+                });
             };
         } else {
             this.group.onMouseDrag = null;
         }
     }
 
-    constructor(objects: StageBaseObject[], dragable = false) {
-        super([0, 0], {});
+    add(object: StageBaseObject) {
+        this.data.push(object);
+    }
+
+    constructor(position: paper.PointLike = [0, 0], objects: StageBaseObject[] = [], dragable = false) {
+        super(position, {});
 
         this.data = objects;
         this.dragable = dragable;

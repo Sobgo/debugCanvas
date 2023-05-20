@@ -14,14 +14,14 @@ export class StageRect extends StageBaseObject {
     }
 
     draw() {
-        const position = this.position;
-        const width = this.width;
-        const height = this.height;
-
-        const value = new paper.Path.Rectangle(position, new paper.Size(width, height));
+        const value = new paper.Path.Rectangle({
+            point: this.position,
+            size: new paper.Size(this.width, this.height)
+        });
 
         if (this.drawOptions?.stroke_color) value.strokeColor = new paper.Color(this.drawOptions.stroke_color);
         if (this.drawOptions?.fill_color) value.fillColor = new paper.Color(this.drawOptions.fill_color);
+        if (this.drawOptions?.stroke_width) value.strokeWidth = this.drawOptions.stroke_width;
 
         return value;
     }

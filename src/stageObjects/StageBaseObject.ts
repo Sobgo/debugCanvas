@@ -1,8 +1,8 @@
 import paper from 'paper';
 
 export class StageBaseObject {
-    protected _position: paper.Point;
     declare drawOptions: Record<string, any>;
+    protected _position: paper.Point;
 
     set position(position: paper.PointLike) {
         this._position = new paper.Point(position);
@@ -19,5 +19,9 @@ export class StageBaseObject {
 
     draw() {
         return new paper.Item();
+    }
+
+    update(delta: any) {
+        return;
     }
 }
